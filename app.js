@@ -6,8 +6,14 @@ var uiController = (function() {
         inputValue : ".add__value",
         addBtn : ".add__btn",
         incomeList: '.income__list',
-        expenseList: '.expenses__list'
-    }
+        expenseList: '.expenses__list',
+        tusuvLabel: '.budget__value',
+        incomeLabel: '.budget__income--value',
+        expenseLabel: '.budget__expenses--value',
+        percentageLabel: '.budget__expenses--percentage',
+        containerDiv: '.container'
+
+    };
 
     return {
         getInput: function() {
@@ -37,15 +43,27 @@ var uiController = (function() {
             // }
         }, 
 
+        tusviigUzuuleh: function(tusuv){
+            document.querySelector(DOMstrings.tusuvLabel).textContent = tusuv.tusuv;
+            document.querySelector(DOMstrings.incomeLabel).textContent = tusuv.totalInc;
+            document.querySelector(DOMstrings.expenseLabel).textContent = tusuv.totalExp;
+            document.querySelector(DOMstrings.percentageLabel).textContent = tusuv.huvi;
+        },
+        deleteListItem: function(id){
+            var el = document.getElementById(id);
+            el.parentNode.removeChild(el);
+
+        },
+
         addListtItem: function(item, type){
             //Orlogo zarlagagiin aguulsan html -iig beltgene.
             var html,list;
             if(type === 'inc'){
                 list = DOMstrings.incomeList;
-                html = '<div class="item clearfix" id="income-%id%"><div class="item__description">$$Description$$</div><div class="right clearfix"><div class="item__value">$$VALUE$$</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+                html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">$$Description$$</div><div class="right clearfix"><div class="item__value">$$VALUE$$</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
             }else{
                 list = DOMstrings.expenseList;
-                html = '<div class="item clearfix" id="expense-%id%"><div class="item__description">$$Description$$</div><div class="right clearfix"><div class="item__value">$$VALUE$$</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+                html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">$$Description$$</div><div class="right clearfix"><div class="item__value">$$VALUE$$</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
             }
             //Ter HTML dotor orlogo zarlagagiin REPLACE ashiglaj oorchilj orgno.
             html = html.replace('%id%', item.id);
@@ -109,11 +127,24 @@ return {
     },
     tusviigAvah: function(){
         return {
-            tusuv: data.totals,
+            tusuv: data.tusuv,
             huvi: data.huvi,
             totalInc: data.totals.inc,
             totalExp: data.totals.exp,
         }
+    },
+    //Orlogo,zarlaga aas click hiihed ustgah function.
+    deleteItem: function(type, id){
+            //data.items[type]--('inc' or 'exp') - aas hamaaraad ter dotroh (data.items) iin bvh id nuudig ni return eer butsaaj [ids] ogj baina.
+            var ids = data.items[type].map(function(el){
+                return el.id;
+            });
+            //ids aas - garnaas oruulsan id aaas hamaarj ter id nii hvddvgeer index iine ids-aas olj index d ogj baina.
+            var index = ids.indexOf(id);
+            //index buyu id ni -1 ees yalgaatai bwal ter id gaa data.items[type] aas delete hiij bna.
+            if(index !== -1){
+                data.items[type].splice(index, 1);
+            }
     },
     addItem: function(type, desc, val){
         var item, id;
@@ -130,7 +161,12 @@ return {
         data.items[type].push(item);
 
         return item;
+    },
+    // ireedvid ustgana 
+    seeData: function(){
+        return data;
     }
+
 };
 })();
 //Programminn holbogch controller-----------------------------------------------------
@@ -155,7 +191,9 @@ var appController = (function(uiController, financeController) {
     var tusuv = financeController.tusviigAvah();
 
     //6.тооцоог дэлгэцэнд гаргана.
+    uiController.tusviigUzuuleh(tusuv);
     console.log(tusuv);
+
       }
     };
 
@@ -164,13 +202,32 @@ var appController = (function(uiController, financeController) {
     document.querySelector(DOM.addBtn).addEventListener("click", function(){
         ctrlAddItem();
        });
-       document.addEventListener("keypress", function(event){
+
+    document.addEventListener("keypress", function(event){
            if(event.keyCode == 13 || event.which == 13)
            {
                ctrlAddItem();
            }
        });
-  }
+       //Ustgah listener
+    document.querySelector(DOM.containerDiv).addEventListener('click', function(event){
+        var id = event.target.parentNode.parentNode.parentNode.parentNode.id;
+        if(id ){
+        var arr = id.split('-');
+        var type = arr[0];
+        var itemId = parseInt(arr[1]);
+
+        //1.Sanhvvgiin modulias type, id ashiglaad ustgana.
+        financeController.deleteItem(type, itemId);
+        //2.Delgets deerees ene elementiig ustgana.
+        uiController.deleteListItem(id);
+        //3.Uldegdel tootsoog shinechilj haruulna.
+
+
+
+        }
+    });
+  };
 
   return {
       init:function(){
